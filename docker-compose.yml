@@ -1,0 +1,35 @@
+version: '3'
+
+services:
+  users_service:
+    build:
+      context: ./users_service
+    ports:
+      - "5000:5000"
+    depends_on:
+      - db_service
+    networks:
+      - my-network
+
+  db_service:
+    build:
+      context: ./db_service
+    ports:
+      - "5001:5001"
+    networks:
+      - my-network
+
+  gateway_service:
+    build:
+      context: ./gateway_service
+    ports:
+      - "5002:5002"
+    depends_on:
+      - users_service
+    networks:
+      - my-network
+
+networks:
+  my-network:
+
+  # Agrega aquí la configuración para tu frontend Vue si también se ejecuta en contenedores

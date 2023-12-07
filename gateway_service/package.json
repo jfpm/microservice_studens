@@ -1,0 +1,12 @@
+{
+  "name": "api-gateway-node",
+  "version": "1.0.0",
+  "main": "server.js", 
+  "dependencies": {
+    "express": "^4.17.1",
+    "body-parser": "^1.19.0",
+    "axios": "^0.24.0"
+  }
+}
+
+  
