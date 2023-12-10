@@ -89,3 +89,30 @@ app.post('/logout', (req, res) => {
 app.listen(port, () => {
   console.log(`Servidor de Node.js escuchando en el puerto ${port}`);
 });
+
+app.post('/api/:segments*', async (req, res) => {
+  const segments = req.params.segments || '';
+  const remainingPath = req.params[0] || '';
+  const fullPath = `/api/${segments}${remainingPath}`;
+  //token header
+  setAxiosHeaders(); // Configura el token en las solicitudes Axios (lo eliminará)
+
+  // Combina los parámetros de la ruta con los datos del cuerpo
+  const requestData = {
+    pathParams: segments.split('/'),
+    bodyParams: req.body
+  };
+
+  //dos linea para enviar a los otros servicios
+  //const response = await axios.post(fullPath, requestData);
+  //res.status(response.status).json(response.data);
+
+  // Aquí puedes imprimir o manejar la ruta dinámica completa y los datos del cuerpo
+  console.log(`Recibida solicitud en ${fullPath}`);
+  console.log('Datos del cuerpo:', requestData);
+  res.status(200).json({ message: 'Data send', fullPath, requestData });
+
+  //globalToken = null; // Invalida el token almacenado
+  //setAxiosHeaders(); // Configura el token en las solicitudes Axios (lo eliminará)
+  //res.status(200).json({ message: 'Logout exitoso' });
+});
