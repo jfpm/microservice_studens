@@ -1,8 +1,10 @@
 const express = require('express');
+const cors = require('cors');
 const bodyParser = require('body-parser');
 const axios = require('axios');
 
 const app = express();
+app.use(cors());
 const port = 5002;
 
 const userServiceUrl = "http://users_service:5000";
