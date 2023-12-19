@@ -123,5 +123,83 @@ def logout():
     else:
         return jsonify({'message': 'No hay sesión activa'}), 400
 
-if __name__ == '__main__':
+
+#Perfiles 
+# Profile methods
+def register_profile(name, ind_estado, created_by):
+    profile = {
+        'id': len(profiles_db) + 1,
+        'name': name,
+        'ind_estado': ind_estado,
+        'created_at': str(datetime.datetime.now()),
+        'created_by': created_by
+    }
+    profiles_db.append(profile)
+    return profile
+
+def get_profiles():
+    return profiles_db
+
+def update_profile(profile_id, name, ind_estado, created_by):
+    for profile in profiles_db:
+        if profile['id'] == profile_id:
+            profile['name'] = name
+            profile['ind_estado'] = ind_estado
+            profile['created_by'] = created_by
+            return profile
+    return None
+
+def enable_disable_profile(profile_id, enable):
+    for profile in profiles_db:
+        if profile['id'] == profile_id:
+            profile['ind_estado'] = 1 if enable else 0
+            return profile
+    return None
+
+def count_users_by_profile(profile_id):
+    count = sum(1 for user in users_db if user['profile_id'] == profile_id)
+    return count
+
+# Profile registration route
+@app.route('/profiles', methods=['POST'])
+def register_profile_route():
+    data = request.get_json()
+    if not data:
+        return jsonify({'message': 'Datos no proporcionados'}), 400
+
+    name = data.get('name')
+    ind_estado = data.get('ind_estado', 1)  # Default to active
+    created_by = data.get('created_by')
+
+    if not name or not created_by:
+        return jsonify({'message': 'Todos los campos son obligatorios'}), 400
+
+    profile = register_profile(name, ind_estado, created_by)
+
+    return jsonify({'message': 'Perfil registrado exitosamente', 'profile': profile}), 201
+
+# Get profiles route
+@app.route('/profiles', methods=['GET'])
+def get_profiles_route():
+    profiles = get_profiles()
+    return jsonify({'profiles': profiles}), 200
+
+# Update profile route
+@app.route('/profiles/<int:profile_id>', methods=['PUT'])
+def update_profile_route(profile_id):
+    data = request.get_json()
+    # Existing code...
+
+# Enable/disable profile route
+@app.route('/profiles/<int:profile_id>/<string:action>', methods=['PUT'])
+def enable_disable_profile_route(profile_id, action):
+    # Existing code...
+
+# Ruta para contar usuarios por perfil
+# @app.route('/profiles/<int:profile_id>/users', methods=['GET'])
+# def contar_usuarios_por_perfil(profile_id):
+#     count = count_users_by_profile(profile_id)
+#     return jsonify({'cantidad_usuarios': count}), 200
+
+if  __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)

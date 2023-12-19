@@ -29,15 +29,15 @@ services:
     networks:
       - my-network
 
-  frontend:
-    build:
-      context: ./frontend
-    ports:
-      - "8086:80"
-    depends_on:
-      - gateway_service
-    networks:
-      - my-network
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #   ports:
+  #     - "8086:80"
+  #   depends_on:
+  #     - gateway_service
+  #   networks:
+  #     - my-network
 
 networks:
   my-network:

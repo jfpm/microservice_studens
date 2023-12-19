@@ -118,3 +118,87 @@ app.post('/api/:segments*', async (req, res) => {
   //setAxiosHeaders(); // Configura el token en las solicitudes Axios (lo eliminará)
   //res.status(200).json({ message: 'Logout exitoso' });
 });
+
+
+//perfiles consumo
+app.get('/profiles', async (req, res) => {
+  console.log("Recibida solicitud en /profiles");
+  try {
+    // Verifica si el usuario está autenticado
+    if (!globalToken) {
+      return res.status(401).json({ message: 'No autorizado. Inicie sesión para acceder.' });
+    }
+
+    // Configura el token en las solicitudes Axios
+    setAxiosHeaders();
+
+    const response = await axios.get(`${userServiceUrl}/profiles`);
+    res.status(response.status).json(response.data);
+  } catch (error) {
+    console.error("Error al obtener perfiles", error.message);
+    res.status(401).json({ message: 'Error al obtener perfiles' });
+  }
+});
+
+app.put('/profiles/:profile_id', async (req, res) => {
+  console.log("Recibida solicitud en /profiles/:profile_id");
+  try {
+    // Verifica si el usuario está autenticado
+    if (!globalToken) {
+      return res.status(401).json({ message: 'No autorizado. Inicie sesión para acceder.' });
+    }
+
+    // Configura el token en las solicitudes Axios
+    setAxiosHeaders();
+
+    const profileId = req.params.profile_id;
+    const response = await axios.put(`${userServiceUrl}/profiles/${profileId}`, req.body);
+    res.status(response.status).json(response.data);
+  } catch (error) {
+    console.error("Error al actualizar perfil", error.message);
+    res.status(401).json({ message: 'Error al actualizar perfil' });
+  }
+});
+
+app.put('/profiles/:profile_id/:action', async (req, res) => {
+  console.log("Recibida solicitud en /profiles/:profile_id/:action");
+  try {
+    // Verifica si el usuario está autenticado
+    if (!globalToken) {
+      return res.status(401).json({ message: 'No autorizado. Inicie sesión para acceder.' });
+    }
+
+    // Configura el token en las solicitudes Axios
+    setAxiosHeaders();
+
+    const profileId = req.params.profile_id;
+    const action = req.params.action; // 'enable' or 'disable'
+    const enable = action === 'enable';
+
+    const response = await axios.put(`${userServiceUrl}/profiles/${profileId}/${action}`);
+    res.status(response.status).json(response.data);
+  } catch (error) {
+    console.error("Error al habilitar/deshabilitar perfil", error.message);
+    res.status(401).json({ message: 'Error al habilitar/deshabilitar perfil' });
+  }
+});
+
+/* app.get('/profiles/:profile_id/users', async (req, res) => {
+  console.log("Recibida solicitud en /profiles/:profile_id/users");
+  try {
+    // Verifica si el usuario está autenticado
+    if (!globalToken) {
+      return res.status(401).json({ message: 'No autorizado. Inicie sesión para acceder.' });
+    }
+
+    // Configura el token en las solicitudes Axios
+    setAxiosHeaders();
+
+    const profileId = req.params.profile_id;
+    const response = await axios.get(`${userServiceUrl}/profiles/${profileId}/users`);
+    res.status(response.status).json(response.data);
+  } catch (error) {
+    console.error("Error al obtener usuarios por perfil", error.message);
+    res.status(401).json({ message: 'Error al obtener usuarios por perfil' });
+  }
+}); */
