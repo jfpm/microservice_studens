@@ -7,13 +7,20 @@ services:
     ports:
       - "5000:5000"
     depends_on:
-      - db_service
+      - mysql
     networks:
       - my-network
 
-  db_service:
-    build:
-      context: ./db_service
+  mysql:
+    image: mysql:5.7
+    container_name: mysql
+    environment: 
+      MYSQL_ROOT_PASSWORD: rootroot
+      MYSQL_DATABASE: userdb
+      MYSQL_USER: adminroot
+      MYSQL_PASSWORD: rootroot1
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql    
     ports:
       - "5001:5001"
     networks:

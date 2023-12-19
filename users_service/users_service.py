@@ -2,13 +2,34 @@ from flask import Flask, request, jsonify
 import jwt
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_cors import CORS
+import pymysql
 
 app = Flask(__name__)
 CORS(app)
 app.config['SECRET_KEY'] = 'mi_clave_secreta_jwt'
 
 # Simulación de una base de datos (deberías usar una base de datos real)
-users_db = []
+# Conexión a la base de datos MySQL
+conn = pymysql.connect(
+    host='http://mysql:5001',
+    port=int(5001),
+    user='adminroot',
+    password='rootroot1',
+    db='userdb',
+    charset='utf8mb4',
+    cursorclass=pymysql.cursors.DictCursor
+)
+try:
+    with conn.cursor() as cursor:
+        cursor.execute("SELECT * FROM usuarios")
+        users_db = cursor.fetchall()
+
+        # Asegúrate de cerrar la conexión
+        conn.close()
+except Exception as e:
+    print(f"Error al conectar con la base de datos: {str(e)}")
+    exit(1)
+
 
 # Variable global para almacenar el token
 global_token = None
@@ -191,15 +212,15 @@ def update_profile_route(profile_id):
     # Existing code...
 
 # Enable/disable profile route
-@app.route('/profiles/<int:profile_id>/<string:action>', methods=['PUT'])
-def enable_disable_profile_route(profile_id, action):
+#@app.route('/profiles/<int:profile_id>/<string:action>', methods=['PUT'])
+#def enable_disable_profile_route(profile_id, action):
     # Existing code...
 
 # Ruta para contar usuarios por perfil
-# @app.route('/profiles/<int:profile_id>/users', methods=['GET'])
-# def contar_usuarios_por_perfil(profile_id):
-#     count = count_users_by_profile(profile_id)
-#     return jsonify({'cantidad_usuarios': count}), 200
+@app.route('/profiles/<int:profile_id>/users', methods=['GET'])
+def contar_usuarios_por_perfil(profile_id):
+    count = count_users_by_profile(profile_id)
+    return jsonify({'cantidad_usuarios': count}), 200 
 
-if  __name__ == '__main__':
+if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)

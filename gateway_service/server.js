@@ -3,6 +3,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const axios = require('axios');
 
+
 const app = express();
 app.use(cors());
 const port = 5002;
@@ -140,6 +141,26 @@ app.get('/profiles', async (req, res) => {
   }
 });
 
+//registrar un perfil
+app.post('/profiles', async (req, res) => {
+  console.log("Recibida solicitud en /profiles (POST)");
+  try {
+    // Verifica si el usuario está autenticado
+    if (!globalToken) {
+      return res.status(401).json({ message: 'No autorizado. Inicie sesión para acceder.' });
+    }
+
+    // Configura el token en las solicitudes Axios
+    setAxiosHeaders();
+
+    const response = await axios.post(`${userServiceUrl}/profiles`, req.body);
+    res.status(response.status).json(response.data);
+  } catch (error) {
+    console.error("Error al registrar perfil", error.message);
+    res.status(500).json({ message: 'Error al registrar perfil' });
+  }
+});
+
 app.put('/profiles/:profile_id', async (req, res) => {
   console.log("Recibida solicitud en /profiles/:profile_id");
   try {
@@ -160,7 +181,7 @@ app.put('/profiles/:profile_id', async (req, res) => {
   }
 });
 
-app.put('/profiles/:profile_id/:action', async (req, res) => {
+/* app.put('/profiles/:profile_id/:action', async (req, res) => {
   console.log("Recibida solicitud en /profiles/:profile_id/:action");
   try {
     // Verifica si el usuario está autenticado
@@ -181,9 +202,9 @@ app.put('/profiles/:profile_id/:action', async (req, res) => {
     console.error("Error al habilitar/deshabilitar perfil", error.message);
     res.status(401).json({ message: 'Error al habilitar/deshabilitar perfil' });
   }
-});
+}); */
 
-/* app.get('/profiles/:profile_id/users', async (req, res) => {
+app.get('/profiles/:profile_id/users', async (req, res) => {
   console.log("Recibida solicitud en /profiles/:profile_id/users");
   try {
     // Verifica si el usuario está autenticado
@@ -201,4 +222,4 @@ app.put('/profiles/:profile_id/:action', async (req, res) => {
     console.error("Error al obtener usuarios por perfil", error.message);
     res.status(401).json({ message: 'Error al obtener usuarios por perfil' });
   }
-}); */
+});
