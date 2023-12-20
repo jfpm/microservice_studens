@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 import jwt
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_cors import CORS
-import pymysql
+import pymysql.cursors
 
 app = Flask(__name__)
 CORS(app)
@@ -45,7 +45,7 @@ def register():
     if not username or not email or not nombre or not apellido or not password or not telefono:
         return jsonify({'message': 'Todos los campos son obligatorios'}), 401
     
-    connection = pymysql.connect(host='mysql', user='adminroot', password='rootroot1', db='userdb')
+    connection = pymysql.connect(host='mysql', user='adminroot', password='rootroot1', db='userdb', cursorclass=pymysql.cursors.DictCursor)
 
     try:
         with connection.cursor() as cursor:
@@ -81,36 +81,35 @@ def login():
     if not data:
         return jsonify({'message': 'Datos no proporcionados'}), 400
     
-    connection = pymysql.connect(host='mysql', user='adminroot', password='rootroot1', db='userdb')
-
     username = data.get('username')
     password = data.get('password')
+
+    connection = pymysql.connect(host='mysql', user='adminroot', password='rootroot1', db='userdb', cursorclass=pymysql.cursors.DictCursor)
 
     try:
         with connection.cursor() as cursor:
             sql = "SELECT * FROM usuarios WHERE username=%s"
-            cursor.execute(sql, (username,))
-            user = cursor.fetchone()
+            cursor.execute(sql,(username))
+            existing_user = cursor.fetchone()
+        
+            if existing_user is not None and check_password_hash(existing_user['password'], password):
+                token = jwt.encode({'username': username}, app.config['SECRET_KEY'], algorithm='HS256')
+                
+                global_token = token
 
-        if user is not None and check_password_hash(user[5], password):  
-            token = jwt.encode({'username': username}, app.config['SECRET_KEY'], algorithm='HS256')
-            
-            global_token = token
+                datos_usuario = {
+                    'username': existing_user['username'],
+                    'email': existing_user['email'],
+                    'nombre': existing_user['nombre'],
+                    'apellido': existing_user['apellido'],
+                    'telefono': existing_user['telefono']
+                }      
 
-            datos_usuario = {
-                'username': user[1],  
-                'email': user[2],
-                'nombre': user[3],
-                'apellido': user[4],
-                'telefono': user[6],
-                'perfil': user[7]
-            }       
-
-            return jsonify({'token': global_token ,'user': datos_usuario}), 200
-            
-        else:
-            print(f"Error en el inicio de sesión para el usuario {username}")
-            return jsonify({'message': 'Credenciales inválidas'}), 401
+                return jsonify({'token': global_token ,'user': datos_usuario}), 200
+                
+            else:
+                print(f"Error en el inicio de sesión para el usuario {username}")
+                return jsonify({'message': 'Credenciales inválidas'}), 401
     
     except Exception as e:
         print(f"Error durante el inicio de sesión: {str(e)}")

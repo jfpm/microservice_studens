@@ -54,7 +54,7 @@ app.post('/login', async (req, res) => {
     console.log('token almacenado', globalToken);
     res.status(response.status).json(response.data);
   } catch (error) {
-    console.error("Error en el inicio de sesión", error.message);
+    console.error("Error en el inicio de sesión:", error);
     res.status(error.response ? error.response.status : 500).json(error.response ? error.response.data : error.message);
   }
 });
