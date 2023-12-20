@@ -80,24 +80,30 @@ def login():
     data = request.get_json()
     if not data:
         return jsonify({'message': 'Datos no proporcionados'}), 400
+    
+    connection = pymysql.connect(host='mysql', user='adminroot', password='rootroot1', db='userdb')
 
     username = data.get('username')
     password = data.get('password')
 
-    user = next((u for u in users_db if u['username'] == username), None)
-
     try:
-        if user is not None and check_password_hash(user['password'], password):
+        with connection.cursor() as cursor:
+            sql = "SELECT * FROM usuarios WHERE username=%s"
+            cursor.execute(sql, (username,))
+            user = cursor.fetchone()
+
+        if user is not None and check_password_hash(user[5], password):  
             token = jwt.encode({'username': username}, app.config['SECRET_KEY'], algorithm='HS256')
             
             global_token = token
 
             datos_usuario = {
-                'username': user['username'],
-                'email': user['email'],
-                'nombre': user['nombre'],
-                'apellido': user['apellido'],
-                'telefono': user['telefono']
+                'username': user[1],  
+                'email': user[2],
+                'nombre': user[3],
+                'apellido': user[4],
+                'telefono': user[6],
+                'perfil': user[7]
             }       
 
             return jsonify({'token': global_token ,'user': datos_usuario}), 200
@@ -109,6 +115,10 @@ def login():
     except Exception as e:
         print(f"Error durante el inicio de sesión: {str(e)}")
         return jsonify({'message': f'Error interno durante el inicio de sesión: {str(e)}'}), 500
+    
+    finally:
+        connection.close()
+
 
 @app.route('/users', methods=['GET'])
 def get_users():
