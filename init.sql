@@ -13,6 +13,14 @@ CREATE TABLE IF NOT EXISTS usuarios (
     apellido VARCHAR(255) NOT NULL,
     password VARCHAR(255) NOT NULL,
     telefono VARCHAR(15) NOT NULL,
-    perfil INTEGER NULL
+    perfil INTEGER NULL,
     token VARCHAR(255) NULL
+);
+
+CREATE TABLE IF NOT EXISTS perfiles (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(255) NOT NULL,
+    ind_estado BOOLEAN NOT NULL DEFAULT 1,
+    created_by VARCHAR(255) NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
