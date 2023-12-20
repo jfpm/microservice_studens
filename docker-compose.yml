@@ -22,7 +22,18 @@ services:
     volumes:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql    
     ports:
-      - "5001:5001"
+      - "5001:3306"
+    networks:
+      - my-network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+    ports:
+      - "8086:80"
     networks:
       - my-network
 

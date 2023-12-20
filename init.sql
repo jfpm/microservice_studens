@@ -1,6 +1,3 @@
-GRANT ALL PRIVILEGES ON . TO 'adminroot'@'%' IDENTIFIED BY 'rootroot1' WITH GRANT OPTION;
-FLUSH PRIVILEGES;
-
 CREATE DATABASE IF NOT EXISTS userdb;
 USE userdb;
 
@@ -14,7 +11,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
     password VARCHAR(255) NOT NULL,
     telefono VARCHAR(15) NOT NULL,
     perfil INTEGER NULL,
-    token VARCHAR(255) NULL,
+    token VARCHAR(255) NULL
 );
 
 CREATE TABLE IF NOT EXISTS perfiles (

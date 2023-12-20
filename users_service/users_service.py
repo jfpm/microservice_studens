@@ -168,41 +168,6 @@ def logout():
 
 
 #Perfiles 
-# Profile methods
-def register_profile(name, ind_estado, created_by):
-    profile = {
-        'id': len(profiles_db) + 1,
-        'name': name,
-        'ind_estado': ind_estado,
-        'created_at': str(datetime.datetime.now()),
-        'created_by': created_by
-    }
-    profiles_db.append(profile)
-    return profile
-
-def get_profiles():
-    return profiles_db
-
-def update_profile(profile_id, name, ind_estado, created_by):
-    for profile in profiles_db:
-        if profile['id'] == profile_id:
-            profile['name'] = name
-            profile['ind_estado'] = ind_estado
-            profile['created_by'] = created_by
-            return profile
-    return None
-
-def enable_disable_profile(profile_id, enable):
-    for profile in profiles_db:
-        if profile['id'] == profile_id:
-            profile['ind_estado'] = 1 if enable else 0
-            return profile
-    return None
-
-def count_users_by_profile(profile_id):
-    count = sum(1 for user in users_db if user['profile_id'] == profile_id)
-    return count
-
 # Profile registration route
 @app.route('/profiles', methods=['POST'])
 def register_profile_route():
@@ -217,32 +182,129 @@ def register_profile_route():
     if not name or not created_by:
         return jsonify({'message': 'Todos los campos son obligatorios'}), 400
 
-    profile = register_profile(name, ind_estado, created_by)
+    try:
+        # Conexión a la base de datos
+        connection = pymysql.connect(host='mysql', user='adminroot', password='rootroot1', db='userdb')
+        with connection.cursor() as cursor:
+            # Insertar el nuevo perfil en la base de datos
+            cursor.execute(
+                "INSERT INTO perfiles (nombre, ind_estado, created_by) VALUES (%s, %s, %s)",
+                (name, ind_estado, created_by)
+            )
+            connection.commit()
 
-    return jsonify({'message': 'Perfil registrado exitosamente', 'profile': profile}), 201
+        return jsonify({'message': 'Perfil registrado exitosamente'}), 201
+
+    except Exception as e:
+        print(f"Error durante el registro del perfil: {str(e)}")
+        return jsonify({'message': f'Error interno durante el registro del perfil: {str(e)}'}), 500
+
+    finally:
+        connection.close()
 
 # Get profiles route
 @app.route('/profiles', methods=['GET'])
 def get_profiles_route():
-    profiles = get_profiles()
-    return jsonify({'profiles': profiles}), 200
+    global global_token
+    token = request.headers.get('Authorization')
+
+    if not token:
+        return jsonify({'message': 'Token no proporcionado'}), 401
+
+    username = verify_token(token)
+
+    if not username:
+        return jsonify({'message': 'Token inválido o expirado'}), 401
+
+    # Configura el token en las solicitudes a otras rutas
+    global_token = token
+
+    connection = pymysql.connect(host='mysql', user='adminroot', password='rootroot1', db='userdb', cursorclass=pymysql.cursors.DictCursor)
+
+    try:
+        with connection.cursor() as cursor:
+            sql = "SELECT nombre, ind_estado, created_by, created_at FROM perfiles"
+            cursor.execute(sql)
+
+            perfiles_list = cursor.fetchall()
+
+            return jsonify({'perfiles': perfiles_list}), 200
+
+    except Exception as e:
+        print(f"Error al obtener perfiles: {str(e)}")
+        return jsonify({'message': f'Error interno al obtener perfiles: {str(e)}'}), 500
+
+    finally:
+        connection.close()
 
 # Update profile route
 @app.route('/profiles/<int:profile_id>', methods=['PUT'])
 def update_profile_route(profile_id):
     data = request.get_json()
-    # Existing code...
 
-# Enable/disable profile route
-#@app.route('/profiles/<int:profile_id>/<string:action>', methods=['PUT'])
-#def enable_disable_profile_route(profile_id, action):
-    # Existing code...
+    if not data:
+        return jsonify({'message': 'Datos no proporcionados'}), 400
+
+    name = data.get('name')
+    ind_estado = data.get('ind_estado', 1)  # Default to active
+    created_by = data.get('created_by')
+
+    if not name or not created_by:
+        return jsonify({'message': 'Todos los campos son obligatorios'}), 400
+
+    try:
+        # Conexión a la base de datos
+        connection = pymysql.connect(host='mysql', user='adminroot', password='rootroot1', db='userdb')
+        with connection.cursor() as cursor:
+            # Verificar si el perfil existe
+            cursor.execute("SELECT * FROM perfiles WHERE id=%s", (profile_id,))
+            existing_profile = cursor.fetchone()
+
+            if existing_profile is None:
+                return jsonify({'message': 'Perfil no encontrado'}), 404
+
+            # Actualizar el perfil en la base de datos
+            cursor.execute(
+                "UPDATE perfiles SET nombre=%s, ind_estado=%s, created_by=%s WHERE id=%s",
+                (name, ind_estado, created_by, profile_id)
+            )
+            connection.commit()
+
+            return jsonify({'message': 'Perfil actualizado exitosamente'}), 200
+
+    except Exception as e:
+        print(f"Error durante la actualización del perfil: {str(e)}")
+        return jsonify({'message': f'Error interno durante la actualización del perfil: {str(e)}'}), 500
+
+    finally:
+        connection.close()
 
 # Ruta para contar usuarios por perfil
+def count_users_by_profile(profile_id):
+    try:
+        # Conexión a la base de datos
+        connection = pymysql.connect(host='mysql', user='adminroot', password='rootroot1', db='userdb')
+        with connection.cursor() as cursor:
+            # Contar usuarios por perfil
+            cursor.execute("SELECT COUNT(*) FROM usuarios WHERE perfil=%s", (profile_id,))
+            count = cursor.fetchone()[0]
+            return count
+
+    except Exception as e:
+        print(f"Error al contar usuarios por perfil: {str(e)}")
+        return None
+
+    finally:
+        connection.close()
+
 @app.route('/profiles/<int:profile_id>/users', methods=['GET'])
-def contar_usuarios_por_perfil(profile_id):
+def contar_usuarios_por_perfil_route(profile_id):
     count = count_users_by_profile(profile_id)
-    return jsonify({'cantidad_usuarios': count}), 200 
+
+    if count is not None:
+        return jsonify({'cantidad_usuarios': count}), 200
+    else:
+        return jsonify({'message': 'Error al contar usuarios por perfil'}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
