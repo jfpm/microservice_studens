@@ -80,6 +80,8 @@ def login():
     data = request.get_json()
     if not data:
         return jsonify({'message': 'Datos no proporcionados'}), 400
+    
+    connection = pymysql.connect(host='mysql', user='adminroot', password='rootroot1', db='userdb')
 
     username = data.get('username')
     password = data.get('password')
@@ -114,6 +116,10 @@ def login():
     except Exception as e:
         print(f"Error durante el inicio de sesión: {str(e)}")
         return jsonify({'message': f'Error interno durante el inicio de sesión: {str(e)}'}), 500
+    
+    finally:
+        connection.close()
+
 
 @app.route('/users', methods=['GET'])
 def get_users():
