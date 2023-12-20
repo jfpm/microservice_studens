@@ -129,14 +129,40 @@ def get_users():
         return jsonify({'message': 'Token no proporcionado'}), 401
 
     username = verify_token(token)
-    
+
     if not username:
         return jsonify({'message': 'Token inválido o expirado'}), 401
 
     # Configura el token en las solicitudes a otras rutas
     global_token = token
 
-    return jsonify({'users': users_db}), 200
+    connection = pymysql.connect(host='mysql', user='adminroot', password='rootroot1', db='userdb')
+
+    try:
+        with connection.cursor() as cursor:
+            sql = "SELECT * FROM usuarios"
+            cursor.execute(sql)
+
+            # Obtener los nombres de las columnas
+            column_names = [column[0] for column in cursor.description]
+
+            users = cursor.fetchall()
+
+            user_list = []
+            for user in users:
+                user_data = {column: user[column_names.index(column)] for column in column_names if column != 'password'}
+                user_list.append(user_data)
+
+            return jsonify({'users': user_list}), 200
+
+    except Exception as e:
+        print(f"Error al obtener usuarios: {str(e)}")
+        return jsonify({'message': f'Error interno al obtener usuarios: {str(e)}'}), 500
+
+    finally:
+        connection.close()
+
+
 
 @app.route('/logout', methods=['POST'])
 def logout():
