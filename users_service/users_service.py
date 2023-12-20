@@ -81,8 +81,6 @@ def login():
     if not data:
         return jsonify({'message': 'Datos no proporcionados'}), 400
     
-    connection = pymysql.connect(host='mysql', user='adminroot', password='rootroot1', db='userdb')
-
     username = data.get('username')
     password = data.get('password')
 
