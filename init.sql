@@ -14,4 +14,5 @@ CREATE TABLE IF NOT EXISTS usuarios (
     password VARCHAR(255) NOT NULL,
     telefono VARCHAR(15) NOT NULL,
     perfil INTEGER NULL
+    token VARCHAR(255) NULL
 );

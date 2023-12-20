@@ -93,9 +93,12 @@ def login():
             existing_user = cursor.fetchone()
         
             if existing_user is not None and check_password_hash(existing_user['password'], password):
+                
                 token = jwt.encode({'username': username}, app.config['SECRET_KEY'], algorithm='HS256')
                 
-                global_token = token
+                sql = "UPDATE usuarios SET token=%s WHERE username=%s"
+
+                cursor.execute(sql, (token, existing_user['username']))
 
                 datos_usuario = {
                     'username': existing_user['username'],
@@ -106,7 +109,7 @@ def login():
                     "perfil": existing_user["perfil"],
                 }      
 
-                return jsonify({'token': global_token ,'user': datos_usuario}), 200
+                return jsonify({'token': token ,'user': datos_usuario}), 200
                 
             else:
                 print(f"Error en el inicio de sesión para el usuario {username}")
