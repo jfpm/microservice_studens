@@ -1,127 +1,60 @@
-apiVersion: v1
-kind: Service
-metadata:
-  name: users-service
-spec:
-  selector:
-    app: users-service
-  ports:
-    - protocol: TCP
-      port: 5000
-      targetPort: 5000
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: users-service
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: users-service
-  template:
-    metadata:
-      labels:
-        app: users-service
-    spec:
-      containers:
-        - name: users-service
-          image: users-service-image:latest
-          ports:
-            - containerPort: 5000
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: db-service
-spec:
-  selector:
-    app: db-service
-  ports:
-    - protocol: TCP
-      port: 5001
-      targetPort: 5001
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: db-service
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: db-service
-  template:
-    metadata:
-      labels:
-        app: db-service
-    spec:
-      containers:
-        - name: db-service
-          image: db-service-image:latest
-          ports:
-            - containerPort: 5001
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: gateway-service
-spec:
-  selector:
-    app: gateway-service
-  ports:
-    - protocol: TCP
-      port: 5002
-      targetPort: 5002
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: gateway-service
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: gateway-service
-  template:
-    metadata:
-      labels:
-        app: gateway-service
-    spec:
-      containers:
-        - name: gateway-service
-          image: gateway-service-image:latest
-          ports:
-            - containerPort: 5002
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: frontend
-spec:
-  selector:
-    app: frontend
-  ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 80
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: frontend
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: frontend
-  template:
-    metadata:
-      labels:
-        app: frontend
-    spec:
-      containers:
-        - name: frontend
-          image: frontend-image:latest
-          ports:
-            - containerPort: 80
+version: '3'
+
+services:
+  users_service:
+    image: freddylor/microservice_studens-users_service-1:latest  # Cambiado a imagen específica
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mysql
+    networks:
+      - my-network
+
+  mysql:
+    image: mysql:5.7
+    container_name: mysql
+    environment: 
+      MYSQL_ROOT_PASSWORD: rootroot
+      MYSQL_DATABASE: userdb
+      MYSQL_USER: adminroot
+      MYSQL_PASSWORD: rootroot1
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql    
+    ports:
+      - "5001:3306"
+    networks:
+      - my-network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+    ports:
+      - "8086:80"
+    networks:
+      - my-network
+
+  gateway_service:
+    image: freddylor/microservice_studens-gateway_service-1:tagname  # Cambiado a imagen específica y etiqueta
+    ports:
+      - "5002:5002"
+    depends_on:
+      - users_service
+    networks:
+      - my-network
+
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #   ports:
+  #     - "8086:80"
+  #   depends_on:
+  #     - gateway_service
+  #   networks:
+  #     - my-network
+
+networks:
+  my-network:
+    driver: bridge

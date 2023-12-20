@@ -109,13 +109,13 @@ app.post('/api/:segments*', async (req, res) => {
   };
 
   //dos linea para enviar a los otros servicios
-  //const response = await axios.post(fullPath, requestData);
-  //res.status(response.status).json(response.data);
+  const response = await axios.post(fullPath, requestData);
+  res.status(response.status).json(response.data);
 
   // Aquí puedes imprimir o manejar la ruta dinámica completa y los datos del cuerpo
   console.log(`Recibida solicitud en ${fullPath}`);
   console.log('Datos del cuerpo:', requestData);
-  res.status(200).json({ message: 'Data send', fullPath, requestData });
+  //res.status(200).json({ message: 'Data send', fullPath, requestData });
 
   //globalToken = null; // Invalida el token almacenado
   //setAxiosHeaders(); // Configura el token en las solicitudes Axios (lo eliminará)
