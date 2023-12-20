@@ -102,7 +102,8 @@ def login():
                     'email': existing_user['email'],
                     'nombre': existing_user['nombre'],
                     'apellido': existing_user['apellido'],
-                    'telefono': existing_user['telefono']
+                    'telefono': existing_user['telefono'],
+                    "perfil": existing_user["perfil"],
                 }      
 
                 return jsonify({'token': global_token ,'user': datos_usuario}), 200
@@ -135,22 +136,14 @@ def get_users():
     # Configura el token en las solicitudes a otras rutas
     global_token = token
 
-    connection = pymysql.connect(host='mysql', user='adminroot', password='rootroot1', db='userdb')
+    connection = pymysql.connect(host='mysql', user='adminroot', password='rootroot1', db='userdb', cursorclass=pymysql.cursors.DictCursor)
 
     try:
         with connection.cursor() as cursor:
-            sql = "SELECT * FROM usuarios"
+            sql = "SELECT username,nombre,apellido,email,telefono,perfil FROM usuarios"
             cursor.execute(sql)
 
-            # Obtener los nombres de las columnas
-            column_names = [column[0] for column in cursor.description]
-
-            users = cursor.fetchall()
-
-            user_list = []
-            for user in users:
-                user_data = {column: user[column_names.index(column)] for column in column_names if column != 'password'}
-                user_list.append(user_data)
+            user_list = cursor.fetchall()
 
             return jsonify({'users': user_list}), 200
 
