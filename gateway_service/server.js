@@ -33,13 +33,15 @@ app.use(bodyParser.json());
 
 app.post('/register', async (req, res) => {
   console.log("Recibida solicitud en /register");
+
   try {
     const response = await axios.post(`${userServiceUrl}/register`, req.body);
     res.status(response.status).json(response.data);
   } catch (error) {
-    console.error("Error al registrar usuario", error.message);
-    res.status(500).json({ message: 'Error al registrar usuario' });
+    console.error("Error al realizar la solicitud:", error);
+    res.status(error.response ? error.response.status : 500).json(error.response ? error.response.data : error.message);
   }
+
 });
 
 app.post('/login', async (req, res) => {
@@ -53,7 +55,7 @@ app.post('/login', async (req, res) => {
     res.status(response.status).json(response.data);
   } catch (error) {
     console.error("Error en el inicio de sesión", error.message);
-    res.status(401).json({ message: 'Error en el inicio de sesión' });
+    res.status(error.response ? error.response.status : 500).json(error.response ? error.response.data : error.message);
   }
 });
 
@@ -72,7 +74,7 @@ app.get('/users', async (req, res) => {
     res.status(response.status).json(response.data);
   } catch (error) {
     console.error("Error en buscar usuarios", error.message);
-    res.status(401).json({ message: 'Error en buscar usuarios' });
+    res.status(error.response ? error.response.status : 500).json(error.response ? error.response.data : error.message);
   }
 });
 

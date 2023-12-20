@@ -10,26 +10,6 @@ app.config['SECRET_KEY'] = 'mi_clave_secreta_jwt'
 
 # Simulación de una base de datos (deberías usar una base de datos real)
 # Conexión a la base de datos MySQL
-conn = pymysql.connect(
-    host='http://mysql:5001',
-    port=int(5001),
-    user='adminroot',
-    password='rootroot1',
-    db='userdb',
-    charset='utf8mb4',
-    cursorclass=pymysql.cursors.DictCursor
-)
-try:
-    with conn.cursor() as cursor:
-        cursor.execute("SELECT * FROM usuarios")
-        users_db = cursor.fetchall()
-
-        # Asegúrate de cerrar la conexión
-        conn.close()
-except Exception as e:
-    print(f"Error al conectar con la base de datos: {str(e)}")
-    exit(1)
-
 
 # Variable global para almacenar el token
 global_token = None
@@ -53,33 +33,47 @@ def register():
     data = request.get_json()
     if not data:
         return jsonify({'message': 'Datos no proporcionados'}), 400
-
+    
     username = data.get('username')
     email = data.get('email')
     nombre = data.get('nombre')
     apellido = data.get('apellido')
     password = data.get('password')
     telefono = data.get('telefono')
+    perfil = 1
 
     if not username or not email or not nombre or not apellido or not password or not telefono:
-        return jsonify({'message': 'Todos los campos son obligatorios'}), 400
+        return jsonify({'message': 'Todos los campos son obligatorios'}), 401
+    
+    connection = pymysql.connect(host='mysql', user='adminroot', password='rootroot1', db='userdb')
 
-    if any(user['username'] == username for user in users_db):
-        return jsonify({'message': 'Nombre de usuario ya existe'}), 400
+    try:
+        with connection.cursor() as cursor:
+            sql = "SELECT * FROM usuarios WHERE username=%s"
+            cursor.execute(sql,(username))
+            existing_user = cursor.fetchone()
 
-    hashed_password = generate_password_hash(password, method='sha256')
-    user = {
-        'username': username,
-        'email': email,
-        'nombre': nombre,
-        'apellido': apellido,
-        'password': hashed_password,
-        'telefono': telefono
-    }
+            if existing_user is not None:
+                return jsonify({'message': 'Nombre de usuario ya existe'}), 401
 
-    users_db.append(user)
+            hashed_password = generate_password_hash(password, method='sha256')
 
-    return jsonify({'message': 'Usuario registrado exitosamente'}), 201
+            cursor.execute(
+                "INSERT INTO usuarios (username, email, nombre, apellido, password, telefono, perfil) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                (username, email, nombre, apellido, hashed_password, telefono, perfil)
+            )
+
+            connection.commit()
+
+            return jsonify({'message': 'Usuario registrado exitosamente'}), 201
+            
+    except Exception as e:
+        print(f"Error durante el registro: {str(e)}")
+        return jsonify({'message': f'Error interno durante el registro: {str(e)}'}), 500
+    
+    finally:
+            connection.close()
+    
 
 @app.route('/login', methods=['POST'])
 def login():
